@@ -5,14 +5,15 @@
     height: 1000,
     width: 1000,
     radius: 25,
-    enemyCount: 2,
+    enemyCount: 20,
     //padding: 20
   };
 
   var gameStats = {
     score: 0,
-    topScore: 0,
-    collisions: 0
+    highScore: 0,
+    collisions: 0,
+    prevCollision: null
   };
 
 
@@ -114,11 +115,11 @@
           x: dx(t),
           y: dy(t),
         };
-        checkCollision(currentPos, onCollision);
+        checkCollision(currentPos, onCollision, enemy);
       };
     }
 
-    function checkCollision(currentPos, collisionCallback) {
+    function checkCollision(currentPos, collisionCallback, enemy) {
       var playerPos = {
         x: parseFloat(d3.select('circle.player').attr('cx')),
         y: parseFloat(d3.select('circle.player').attr('cy')),
@@ -130,16 +131,38 @@
       var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
 
       if (distance < rSum) {
-        return onCollision();
+        return onCollision(enemy);
       }
     }
 
-    function onCollision() {
-      gameStats.collisions++;
-      d3.select('.collisions span').text(gameStats.collisions.toString());
-      return;
+    function onCollision(enemy) {
+      if (gameStats.prevCollision !== enemy) {
+        gameStats.prevCollision = enemy;
+        gameStats.collisions++;
+        d3.select('.collisions span').text(gameStats.collisions.toString());
+        
+        if (gameStats.collisions > 5) {
+          updateHighScore();
+          gameStats.score = 0;
+          updateScore();
+          gameStats.collisions = 0;
+          d3.select('.collisions span').text(gameStats.collisions.toString());
+        } 
+        return;
+      }
     }
 
+  };
+
+
+  var updateScore = function() {
+    d3.select('.current span').text(gameStats.score.toString());
+  };
+
+
+  var updateHighScore = function() {
+    gameStats.highScore = Math.max(gameStats.score, gameStats.highScore);
+    d3.select('.highscore span').text(gameStats.highScore.toString());
   };
 
 
@@ -149,11 +172,15 @@
       var newEnemyLocations = createEnemies();
       renderEnemies(newEnemyLocations);
     };
+    var upScore = function() {
+      gameStats.score++;
+      updateScore();
+    };
     createPlayer();
     gameturn();
-    setInterval(gameturn, 1000);
+    setInterval(gameturn, 2000);
+    setInterval(upScore, 100);
   };
-
 
   play();
 
