@@ -1,5 +1,8 @@
 ### node etc ###
 
+#sandbox
+sandbox/
+
 # Logs
 logs
 *.log

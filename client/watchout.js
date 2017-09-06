@@ -4,9 +4,8 @@
   var gameSetup = {
     height: 1000,
     width: 1000,
-    radius: 25,
+    radius: 20,
     enemyCount: 20,
-    //padding: 20
   };
 
   var gameStats = {
@@ -21,8 +20,8 @@
 
 
   var axes = {
-    x: d3.scale.linear().domain([0, 100]).range([0, gameSetup.width]),
-    y: d3.scale.linear().domain([0, 100]).range([0, gameSetup.height])
+    x: d3.scale.linear().domain([0, 100]).range([0 + gameSetup.radius, gameSetup.width - gameSetup.radius]),
+    y: d3.scale.linear().domain([0, 100]).range([0 + gameSetup.radius, gameSetup.height - gameSetup.radius])
   };
 
 
@@ -58,7 +57,12 @@
     }
 
     function dragged(d) {
-      d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+      var inWidth = d3.event.x < gameSetup.width - gameSetup.radius && d3.event.x > gameSetup.radius;
+      var inHeight = d3.event.y < gameSetup.height - gameSetup.radius && d3.event.y > gameSetup.radius;
+
+      if (inWidth && inHeight) {
+        d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+      }
     }
 
     function dragended(d) {
