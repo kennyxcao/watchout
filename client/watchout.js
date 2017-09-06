@@ -1,12 +1,12 @@
 // start slingin' some d3 here.
 (function() {
 
-  var gameOptions = {
+  var gameSetup = {
     height: 1000,
     width: 1000,
     radius: 25,
     enemyCount: 2,
-    padding: 20
+    //padding: 20
   };
 
   var gameStats = {
@@ -16,18 +16,18 @@
   };
 
 
-  var gameBoard = d3.select('.board').append('svg:svg').attr('width', gameOptions.width).attr('height', gameOptions.height);
+  var gameBoard = d3.select('.board').append('svg:svg').attr('width', gameSetup.width).attr('height', gameSetup.height);
 
 
   var axes = {
-    x: d3.scale.linear().domain([0, 100]).range([0, gameOptions.width]),
-    y: d3.scale.linear().domain([0, 100]).range([0, gameOptions.height])
+    x: d3.scale.linear().domain([0, 100]).range([0, gameSetup.width]),
+    y: d3.scale.linear().domain([0, 100]).range([0, gameSetup.height])
   };
 
 
   var createPlayer = function() {
-    var xPos = gameOptions.height / 2;
-    var yPos = gameOptions.width / 2;
+    var xPos = gameSetup.height / 2;
+    var yPos = gameSetup.width / 2;
     var playerData = {
         id: 100,
         x: xPos,
@@ -48,7 +48,7 @@
       return d.x;
     }).attr('cy', function(d) {
       return d.y;
-    }).attr('r', gameOptions.radius)
+    }).attr('r', gameSetup.radius)
     .call(drag);
 
     function dragstarted(d) {
@@ -67,7 +67,7 @@
 
 
   var createEnemies = function() {
-    return _.range(0, gameOptions.enemyCount).map(function(i) {
+    return _.range(0, gameSetup.enemyCount).map(function(i) {
       return {
         id: i,
         x: Math.random() * 100,
@@ -82,26 +82,62 @@
       return d.id; 
     });
 
-    enemies.enter().append('svg:circle').attr('class', 'enemy').attr('cx', function(enemy) {
-      return axes.x(enemy.x);
-    }).attr('cy', function(enemy) {
-      return axes.y(enemy.y);
-    }).attr('r', gameOptions.radius);
+    enemies.enter().append('svg:circle').attr('class', 'enemy').attr('cx', function(d) {
+      return axes.x(d.x);
+    }).attr('cy', function(d) {
+      return axes.y(d.y);
+    }).attr('r', gameSetup.radius);
 
-    enemies.transition().duration(2500)
+    enemies.transition().duration(2000)
           .attr('cx', function(d) { return axes.x(d.x); })
-          .attr('cy', function(d) { return axes.y(d.y); });
-
-    //enemies.transition().tween('collision', tweenCollsionDetection);
+          .attr('cy', function(d) { return axes.y(d.y); })
+          .tween('collision', tweenCollsionDetection);
 
     enemies.exit().remove();
 
 
-    function tweenCollsionDetection() {
-
-      return function(t) {
-
+    function tweenCollsionDetection(endData) {
+      var enemy = d3.select(this);
+      var startPos = {
+        x: parseFloat(enemy.attr('cx')),
+        y: parseFloat(enemy.attr('cy')),
       };
+      var endPos = {
+        x: axes.x(endData.x),
+        y: axes.y(endData.y)
+      };
+      var dx = d3.interpolateRound(startPos.x, endPos.x);    
+      var dy = d3.interpolateRound(startPos.y, endPos.y);    
+      
+      return function(t) {
+        var currentPos = {
+          x: dx(t),
+          y: dy(t),
+        };
+        checkCollision(currentPos, onCollision);
+      };
+    }
+
+    function checkCollision(currentPos, collisionCallback) {
+      var playerPos = {
+        x: parseFloat(d3.select('circle.player').attr('cx')),
+        y: parseFloat(d3.select('circle.player').attr('cy')),
+      };
+
+      var rSum = gameSetup.radius * 2;
+      var xDiff = playerPos.x - currentPos.x;
+      var yDiff = playerPos.y - currentPos.y;
+      var distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+
+      if (distance < rSum) {
+        return onCollision();
+      }
+    }
+
+    function onCollision() {
+      gameStats.collisions++;
+      d3.select('.collisions span').text(gameStats.collisions.toString());
+      return;
     }
 
   };
@@ -115,7 +151,7 @@
     };
     createPlayer();
     gameturn();
-    setInterval(gameturn, 2500);
+    setInterval(gameturn, 1000);
   };
 
 
