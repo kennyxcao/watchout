@@ -6,6 +6,7 @@
     width: 1000,
     radius: 20,
     enemyCount: 20,
+    duration: 2000
   };
 
   var gameStats = {
@@ -15,17 +16,14 @@
     prevCollision: null
   };
 
-
   var gameBoard = d3.select('.board').append('svg:svg').attr('width', gameSetup.width).attr('height', gameSetup.height);
-
 
   var axes = {
     x: d3.scale.linear().domain([0, 100]).range([0 + gameSetup.radius, gameSetup.width - gameSetup.radius]),
     y: d3.scale.linear().domain([0, 100]).range([0 + gameSetup.radius, gameSetup.height - gameSetup.radius])
   };
 
-
-  var createPlayer = function() {
+  var renderPlayer = function() {
     var xPos = gameSetup.height / 2;
     var yPos = gameSetup.width / 2;
     var playerData = {
@@ -49,7 +47,7 @@
     }).attr('cy', function(d) {
       return d.y;
     }).attr('r', gameSetup.radius)
-    .call(drag);
+      .call(drag);
 
     function dragstarted(d) {
       d3.event.sourceEvent.stopPropagation();
@@ -81,7 +79,6 @@
     });
   };
 
- 
   var renderEnemies = function(enemyData) {
     var enemies = gameBoard.selectAll('circle.enemy').data(enemyData, function(d) {
       return d.id; 
@@ -93,7 +90,7 @@
       return axes.y(d.y);
     }).attr('r', gameSetup.radius);
 
-    enemies.transition().duration(2000)
+    enemies.transition().duration(gameSetup.duration)
           .attr('cx', function(d) { return axes.x(d.x); })
           .attr('cy', function(d) { return axes.y(d.y); })
           .tween('collision', tweenCollsionDetection);
@@ -158,7 +155,6 @@
 
   };
 
-
   var updateScore = function() {
     d3.select('.current span').text(gameStats.score.toString());
   };
@@ -169,20 +165,17 @@
     d3.select('.highscore span').text(gameStats.highScore.toString());
   };
 
-
-
   play = function() {
     var gameturn = function() {
-      var newEnemyLocations = createEnemies();
-      renderEnemies(newEnemyLocations);
+      renderEnemies(createEnemies());
     };
     var upScore = function() {
       gameStats.score++;
       updateScore();
     };
-    createPlayer();
+    renderPlayer();
     gameturn();
-    setInterval(gameturn, 2000);
+    setInterval(gameturn, gameSetup.duration);
     setInterval(upScore, 100);
   };
 
